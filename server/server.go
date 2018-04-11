@@ -13,7 +13,12 @@ func NewServer() {
 	router := fasthttprouter.New()
 
 	router.GET("/pushstatts", func(ctx *fasthttp.RequestCtx) {
-		GetStatsOfMqtt()
+		env := ctx.QueryArgs().Peek("env")
+		GetStatsOfMqtt(string(env))
+	})
+
+	router.GET("/getconnect", func(ctx *fasthttp.RequestCtx) {
+		GetConnectLatency(ctx)
 	})
 
 	router.PanicHandler = func(ctx *fasthttp.RequestCtx, p interface{}) {
