@@ -47,7 +47,7 @@ func GetConnectLatency(ctx *fasthttp.RequestCtx) {
 		MinMaxM Stats
 	)
 
-	connectL := client.NewQuery("SELECT * FROM ConnectLatency WHERE time > now() - 1h ORDER BY time DESC", MyDB, "ns")
+	connectL := client.NewQuery("SELECT * FROM ConnectLatency WHERE time > now() - 1h ORDER BY time ASC", MyDB, "ns")
 	if response, err := GetInflxInstance().Query(connectL); err == nil && response.Error() == nil {
 		for i := range response.Results[0].Series[0].Values {
 			t, _ := response.Results[0].Series[0].Values[i][0].(json.Number).Int64()
@@ -73,7 +73,7 @@ func GetConnectLatency(ctx *fasthttp.RequestCtx) {
 		fmt.Println(err, response)
 	}
 
-	connectP := client.NewQuery("SELECT * FROM PubAckLatency WHERE time > now() - 1h ORDER BY time DESC", MyDB, "ns")
+	connectP := client.NewQuery("SELECT * FROM PubAckLatency WHERE time > now() - 1h ORDER BY time ASC", MyDB, "ns")
 	if response, err := GetInflxInstance().Query(connectP); err == nil && response.Error() == nil {
 		for i := range response.Results[0].Series[0].Values {
 			t, _ := response.Results[0].Series[0].Values[i][0].(json.Number).Int64()
@@ -97,7 +97,7 @@ func GetConnectLatency(ctx *fasthttp.RequestCtx) {
 		fmt.Println(err, response)
 	}
 
-	msgSent := client.NewQuery("SELECT * FROM MessageSentLatency WHERE time > now() - 1h ORDER BY time DESC", MyDB, "ns")
+	msgSent := client.NewQuery("SELECT * FROM MessageSentLatency WHERE time > now() - 1h ORDER BY time ASC", MyDB, "ns")
 	if response, err := GetInflxInstance().Query(msgSent); err == nil && response.Error() == nil {
 		for i := range response.Results[0].Series[0].Values {
 			t, _ := response.Results[0].Series[0].Values[i][0].(json.Number).Int64()
