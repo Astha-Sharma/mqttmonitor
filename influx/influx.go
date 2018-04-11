@@ -44,9 +44,9 @@ func PushData(db string, latency int64) {
 		"latency": latency,
 		"server":  MqttServer,
 	}
-	//loc, _ := time.LoadLocation("Asia/Kolkata")
-	//now := time.Now().In(loc)
-	pt, err := client.NewPoint(db, nil, fields, time.Now())
+	loc, _ := time.LoadLocation("Asia/Kolkata")
+	now := time.Now().In(loc)
+	pt, err := client.NewPoint(db, nil, fields, now)
 	if err != nil {
 		fmt.Println(err)
 	}
