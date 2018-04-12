@@ -16,8 +16,7 @@ import (
 const (
 	MyDB          = "mqttmonitoring"
 	INFLUX_URL    = "http://got.hike.in:8086"
-	SLACK_WEBHOOK = "https://hooks.slack.com/services/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"
-	SLACK_TOKEN   = "xoxp-2151902985-167537642311-201751930819-e632196c0b2de970473a57b95907cc8e"
+	SLACK_WEBHOOK = ""
 )
 
 var (

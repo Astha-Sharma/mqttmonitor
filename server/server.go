@@ -21,6 +21,10 @@ func NewServer() {
 		GetConnectLatency(ctx)
 	})
 
+	router.GET("/getupdowntime", func(ctx *fasthttp.RequestCtx) {
+		GetUpDownTime(ctx)
+	})
+
 	router.PanicHandler = func(ctx *fasthttp.RequestCtx, p interface{}) {
 		glog.V(0).Infof("Panic occurred %s", p, ctx.Request.URI().String())
 	}

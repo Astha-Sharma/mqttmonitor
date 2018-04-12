@@ -126,6 +126,10 @@ func GetConnectLatency(ctx *fasthttp.RequestCtx) {
 	ctx.Response.SetBodyString(ToJsonString(ResponseAB))
 }
 
+func GetUpDownTime(ctx *fasthttp.RequestCtx) {
+
+}
+
 func ToJsonString(p interface{}) string {
 	bytes, err := json.Marshal(p)
 	if err != nil {

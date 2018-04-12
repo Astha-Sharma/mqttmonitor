@@ -79,3 +79,30 @@ type ResponseA struct {
 	ArrayM []ResponseO `json:"messagesent,omitempty"`
 	StatsM Stats       `json:"messagesentstats,omitempty"`
 }
+
+type UpTimeStruct struct {
+	Connect24Hours struct {
+		Uptime  int `json:"uptime"`
+		Failure int `json:"failure"`
+	} `json:"connect24hours"`
+	Puback24Hours struct {
+		Uptime  int `json:"uptime"`
+		Failure int `json:"failure"`
+	} `json:"puback24hours"`
+	Msgsent24Hours struct {
+		Uptime  int `json:"uptime"`
+		Failure int `json:"failure"`
+	} `json:"msgsent24hours"`
+	Connectlastweek struct {
+		Uptime  int `json:"uptime"`
+		Failure int `json:"failure"`
+	} `json:"connectlastweek"`
+	Pubacklastweek struct {
+		Uptime  int `json:"uptime"`
+		Failure int `json:"failure"`
+	} `json:"pubacklastweek"`
+	Msgsentlastweek struct {
+		Uptime  int `json:"uptime"`
+		Failure int `json:"failure"`
+	} `json:"msgsentlastweek"`
+}
