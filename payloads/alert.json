@@ -1,0 +1,19 @@
+{    
+    "text": "",    
+    "channel" : "#mqtt-alerts",
+    "attachments": [
+        {
+            "fallback": "",
+            "color": "#b02525",
+            "attachment_type": "default",            
+			"title": "[ MQTT Alert ]",
+            "fields": [
+                {
+                    "title": "${0}",
+                    "value": "${1}",
+                    "short": true
+                }
+            ]        
+        }
+    ]
+}

@@ -3,19 +3,28 @@ package influx
 import (
 	"fmt"
 	"github.com/influxdata/influxdb/client/v2"
+	_ "github.com/nlopes/slack"
+	fast "github.com/vivekvasvani/mqttmonitor/client"
+	"io/ioutil"
+	"os"
+	"strconv"
+	"strings"
 	"sync"
 	"time"
 )
 
 const (
-	MyDB       = "mqttmonitoring"
-	INFLUX_URL = "http://got.hike.in:8086"
+	MyDB          = "mqttmonitoring"
+	INFLUX_URL    = "http://got.hike.in:8086"
+	SLACK_WEBHOOK = "https://hooks.slack.com/services/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"
+	SLACK_TOKEN   = "xoxp-2151902985-167537642311-201751930819-e632196c0b2de970473a57b95907cc8e"
 )
 
 var (
 	MqttServer string = "mqtt.im.hike.in"
 	instance   client.Client
 	once       sync.Once
+	header     = make(map[string]string)
 )
 
 func GetInflxInstance() client.Client {
@@ -56,4 +65,46 @@ func PushData(db string, latency int64) {
 	if err := GetInflxInstance().Write(bp); err != nil {
 		fmt.Println(err)
 	}
+
+	if latency >= 5000 {
+		PostInSlack(db, latency)
+	}
+
+}
+
+func PostInSlack(db string, latency int64) {
+	var alertType string
+	switch db {
+	case "ConnectLatency":
+		alertType = "Connect Latency is HIGH"
+	case "PubAckLatency":
+		alertType = "PubAck Latency is HIGH"
+	case "MessageSentLatency":
+		alertType = "MessageSent Latency is HIGH"
+	}
+
+	options := make([]string, 2)
+	options[0] = alertType
+	options[1] = strconv.FormatInt(latency, 10) + " ms"
+	payload := SubstParams(options, GetPayload("alert.json"))
+	fast.HitRequest(SLACK_WEBHOOK, "POST", header, payload)
+}
+
+func GetPayload(payloadPath string) string {
+	if payloadPath != "" {
+		dir, _ := os.Getwd()
+		templateData, _ := ioutil.ReadFile(dir + "/payloads/" + payloadPath)
+		return string(templateData)
+	} else {
+		return ""
+	}
+}
+
+func SubstParams(sessionMap []string, textData string) string {
+	for i, value := range sessionMap {
+		if strings.ContainsAny(textData, "${"+strconv.Itoa(i)) {
+			textData = strings.Replace(textData, "${"+strconv.Itoa(i)+"}", value, -1)
+		}
+	}
+	return textData
 }
