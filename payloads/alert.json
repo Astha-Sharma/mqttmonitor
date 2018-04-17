@@ -11,7 +11,7 @@
                 {
                     "title": "${0}",
                     "value": "${1}",
-                    "short": true
+                    "short": false
                 }
             ]        
         }

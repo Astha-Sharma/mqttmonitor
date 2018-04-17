@@ -81,28 +81,60 @@ type ResponseA struct {
 }
 
 type UpTimeStruct struct {
-	Connect24Hours struct {
-		Uptime  int `json:"uptime"`
-		Failure int `json:"failure"`
-	} `json:"connect24hours"`
-	Puback24Hours struct {
-		Uptime  int `json:"uptime"`
-		Failure int `json:"failure"`
-	} `json:"puback24hours"`
-	Msgsent24Hours struct {
-		Uptime  int `json:"uptime"`
-		Failure int `json:"failure"`
-	} `json:"msgsent24hours"`
-	Connectlastweek struct {
-		Uptime  int `json:"uptime"`
-		Failure int `json:"failure"`
-	} `json:"connectlastweek"`
-	Pubacklastweek struct {
-		Uptime  int `json:"uptime"`
-		Failure int `json:"failure"`
-	} `json:"pubacklastweek"`
-	Msgsentlastweek struct {
-		Uptime  int `json:"uptime"`
-		Failure int `json:"failure"`
-	} `json:"msgsentlastweek"`
+	Connect24Hours  Cards `json:"connect24hours"`
+	Puback24Hours   Cards `json:"puback24hours"`
+	Msgsent24Hours  Cards `json:"msgsent24hours"`
+	Connectlastweek Cards `json:"connectlastweek"`
+	Pubacklastweek  Cards `json:"pubacklastweek"`
+	Msgsentlastweek Cards `json:"msgsentlastweek"`
+}
+
+type Cards struct {
+	P99th   int64   `json:"P99th"`
+	Uptime  float32 `json:"uptime"`
+	Failure int64   `json:"failure"`
+	Count   int64   `json:"total"`
+}
+
+func (c *Cards) setPer(value int64) {
+	c.P99th = value
+}
+
+func (c *Cards) setUptime(value float32) {
+	c.Uptime = value
+}
+
+func (c *Cards) setFailure(value int64) {
+	c.Failure = value
+}
+
+func (c *Cards) setTotal(value int64) {
+	c.Count = value
+}
+
+func (c *Cards) getPer() int64 {
+	return c.P99th
+}
+
+func (c *Cards) getUptime() float32 {
+	return c.Uptime
+}
+
+func (c *Cards) getFailure() int64 {
+	return c.Failure
+}
+
+func (c *Cards) getTotal() int64 {
+	return c.Count
+}
+
+type ResponseDist struct {
+	Connectlastweek []RangeS `json:"connectlastweek"`
+	Pubacklastweek  []RangeS `json:"pubacklastweek"`
+	Messagelastweek []RangeS `json:"messagelastweek"`
+}
+
+type RangeS struct {
+	Range string `json:"range"`
+	Count int64  `json:"count"`
 }
