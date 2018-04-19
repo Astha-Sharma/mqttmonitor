@@ -90,10 +90,11 @@ type UpTimeStruct struct {
 }
 
 type Cards struct {
-	P99th   int64   `json:"P99th"`
-	Uptime  float32 `json:"uptime"`
-	Failure int64   `json:"failure"`
-	Count   int64   `json:"total"`
+	P99th      int64    `json:"P99th"`
+	Uptime     float32  `json:"uptime"`
+	Failure    int64    `json:"failure"`
+	Count      int64    `json:"total"`
+	OutageTime []string `json:"outagetime"`
 }
 
 func (c *Cards) setPer(value int64) {
@@ -126,6 +127,14 @@ func (c *Cards) getFailure() int64 {
 
 func (c *Cards) getTotal() int64 {
 	return c.Count
+}
+
+func (c *Cards) setOutage(value []string) {
+	c.OutageTime = value
+}
+
+func (c *Cards) getOutage() []string {
+	return c.OutageTime
 }
 
 type ResponseDist struct {

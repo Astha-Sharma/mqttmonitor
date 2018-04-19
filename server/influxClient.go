@@ -7,6 +7,7 @@ import (
 	"github.com/valyala/fasthttp"
 	_ "github.com/vjeantet/jodaTime"
 	"log"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -140,12 +141,18 @@ func GetConnectLatency(ctx *fasthttp.RequestCtx) {
 
 func GetUpDownTime(ctx *fasthttp.RequestCtx) {
 	var (
-		CardsConnect24       Cards
-		CardsConnectLastWeek Cards
-		CardsPubAck24        Cards
-		CardsPubAckLastWeek  Cards
-		CardsMsg24           Cards
-		CardsMsgLastWeek     Cards
+		CardsConnect24        Cards
+		CardsConnectLastWeek  Cards
+		CardsPubAck24         Cards
+		CardsPubAckLastWeek   Cards
+		CardsMsg24            Cards
+		CardsMsgLastWeek      Cards
+		OutageConnect24       = []string{}
+		OutageConnectLastWeek = []string{}
+		OutagePubAck24        = []string{}
+		OutagePubAckLastWeek  = []string{}
+		OutageMsg24           = []string{}
+		OutageMsgLastWeek     = []string{}
 	)
 
 	connectC := client.NewQuery("SELECT PERCENTILE(latency, 99), COUNT(*) FROM ConnectLatency WHERE time > now() - 24h", MyDB, "ns")
@@ -178,39 +185,100 @@ func GetUpDownTime(ctx *fasthttp.RequestCtx) {
 		fmt.Println(err, response)
 	}
 
-	FconnectC := client.NewQuery("SELECT COUNT(*) FROM ConnectLatency WHERE (latency > 5000 OR latency < 0) AND time > now() - 24h", MyDB, "ns")
-	if response, err := GetInflxInstance().Query(FconnectC); err == nil && response.Error() == nil {
-		fmt.Println(response)
+	/*
+		FconnectC := client.NewQuery("SELECT COUNT(*) FROM ConnectLatency WHERE (latency > 5000 OR latency < 0) AND time > now() - 24h", MyDB, "ns")
+		if response, err := GetInflxInstance().Query(FconnectC); err == nil && response.Error() == nil {
+			fmt.Println(response)
+			if len(response.Results[0].Series) == 0 {
+				CardsConnect24.setFailure(0)
+			} else {
+				failures, _ := response.Results[0].Series[0].Values[0][1].(json.Number).Int64()
+				CardsConnect24.setFailure(failures)
+			}
+		} else {
+			fmt.Println(err, response)
+		}
+	*/
+
+	OutageFconnectC := client.NewQuery("SELECT * FROM ConnectLatency WHERE (latency > 5000 OR latency < 0) AND time > now() - 24h", MyDB, "ns")
+	if response, err := GetInflxInstance().Query(OutageFconnectC); err == nil && response.Error() == nil {
+		if len(response.Results[0].Series) != 0 {
+			for i := range response.Results[0].Series[0].Values {
+				t, _ := response.Results[0].Series[0].Values[i][0].(json.Number).Int64()
+				latency, _ := response.Results[0].Series[0].Values[i][1].(json.Number).Int64()
+				OutageConnect24 = append(OutageConnect24, strings.Split(time.Unix(0, t).String(), ".")[0]+" : "+strconv.FormatInt(latency, 10)+" ms")
+			}
+		}
 		if len(response.Results[0].Series) == 0 {
 			CardsConnect24.setFailure(0)
 		} else {
-			failures, _ := response.Results[0].Series[0].Values[0][1].(json.Number).Int64()
-			CardsConnect24.setFailure(failures)
+			CardsConnect24.setFailure(int64(len(response.Results[0].Series[0].Values)))
 		}
 	} else {
 		fmt.Println(err, response)
 	}
 
-	FconnectP := client.NewQuery("SELECT COUNT(*) FROM PubAckLatency WHERE (latency > 5000 OR latency < 0) AND time > now() - 24h", MyDB, "ns")
-	if response, err := GetInflxInstance().Query(FconnectP); err == nil && response.Error() == nil {
+	/*
+		FconnectP := client.NewQuery("SELECT COUNT(*) FROM PubAckLatency WHERE (latency > 5000 OR latency < 0) AND time > now() - 24h", MyDB, "ns")
+		if response, err := GetInflxInstance().Query(FconnectP); err == nil && response.Error() == nil {
+			if len(response.Results[0].Series) == 0 {
+				CardsPubAck24.setFailure(0)
+			} else {
+				failures, _ := response.Results[0].Series[0].Values[0][1].(json.Number).Int64()
+				CardsPubAck24.setFailure(failures)
+			}
+		} else {
+			fmt.Println(err, response)
+		}
+	*/
+
+	OutagePuback := client.NewQuery("SELECT * FROM PubAckLatency WHERE (latency > 5000 OR latency < 0) AND time > now() - 24h", MyDB, "ns")
+	if response, err := GetInflxInstance().Query(OutagePuback); err == nil && response.Error() == nil {
+		if len(response.Results[0].Series) != 0 {
+			for i := range response.Results[0].Series[0].Values {
+				t, _ := response.Results[0].Series[0].Values[i][0].(json.Number).Int64()
+				latency, _ := response.Results[0].Series[0].Values[i][1].(json.Number).Int64()
+				OutagePubAck24 = append(OutagePubAck24, strings.Split(time.Unix(0, t).String(), ".")[0]+" : "+strconv.FormatInt(latency, 10)+" ms")
+			}
+		}
 		if len(response.Results[0].Series) == 0 {
 			CardsPubAck24.setFailure(0)
 		} else {
-			failures, _ := response.Results[0].Series[0].Values[0][1].(json.Number).Int64()
-			CardsPubAck24.setFailure(failures)
+			CardsPubAck24.setFailure(int64(len(response.Results[0].Series[0].Values)))
 		}
 	} else {
 		fmt.Println(err, response)
 	}
 
-	FconnectM := client.NewQuery("SELECT COUNT(*) FROM MessageSentLatency WHERE (latency > 5000 OR latency < 0) AND time > now() - 24h", MyDB, "ns")
-	if response, err := GetInflxInstance().Query(FconnectM); err == nil && response.Error() == nil {
+	/*
+		FconnectM := client.NewQuery("SELECT COUNT(*) FROM MessageSentLatency WHERE (latency > 5000 OR latency < 0) AND time > now() - 24h", MyDB, "ns")
+		if response, err := GetInflxInstance().Query(FconnectM); err == nil && response.Error() == nil {
+			if len(response.Results[0].Series) == 0 {
+				CardsMsg24.setFailure(0)
+			} else {
+				failures, _ := response.Results[0].Series[0].Values[0][1].(json.Number).Int64()
+				CardsMsg24.setFailure(failures)
+			}
+		} else {
+			fmt.Println(err, response)
+		}
+	*/
+
+	OutageMessageSent := client.NewQuery("SELECT * FROM MessageSentLatency WHERE (latency > 5000 OR latency < 0) AND time > now() - 24h", MyDB, "ns")
+	if response, err := GetInflxInstance().Query(OutageMessageSent); err == nil && response.Error() == nil {
+		for i := range response.Results[0].Series[0].Values {
+			if len(response.Results[0].Series) != 0 {
+				t, _ := response.Results[0].Series[0].Values[i][0].(json.Number).Int64()
+				latency, _ := response.Results[0].Series[0].Values[i][1].(json.Number).Int64()
+				OutageMsg24 = append(OutageMsg24, strings.Split(time.Unix(0, t).String(), ".")[0]+" : "+strconv.FormatInt(latency, 10)+" ms")
+			}
+		}
 		if len(response.Results[0].Series) == 0 {
 			CardsMsg24.setFailure(0)
 		} else {
-			failures, _ := response.Results[0].Series[0].Values[0][1].(json.Number).Int64()
-			CardsMsg24.setFailure(failures)
+			CardsMsg24.setFailure(int64(len(response.Results[0].Series[0].Values)))
 		}
+
 	} else {
 		fmt.Println(err, response)
 	}
@@ -245,50 +313,122 @@ func GetUpDownTime(ctx *fasthttp.RequestCtx) {
 		fmt.Println(err, response)
 	}
 
-	LWFconnectC := client.NewQuery("SELECT COUNT(*) FROM ConnectLatency WHERE (latency > 5000 OR latency < 0) AND time > now() - 7d", MyDB, "ns")
-	if response, err := GetInflxInstance().Query(LWFconnectC); err == nil && response.Error() == nil {
-		fmt.Println(response)
+	/*
+		LWFconnectC := client.NewQuery("SELECT COUNT(*) FROM ConnectLatency WHERE (latency > 5000 OR latency < 0) AND time > now() - 7d", MyDB, "ns")
+		if response, err := GetInflxInstance().Query(LWFconnectC); err == nil && response.Error() == nil {
+			fmt.Println(response)
+			if len(response.Results[0].Series) == 0 {
+				CardsConnectLastWeek.setFailure(0)
+			} else {
+				failures, _ := response.Results[0].Series[0].Values[0][1].(json.Number).Int64()
+				CardsConnectLastWeek.setFailure(failures)
+			}
+		} else {
+			fmt.Println(err, response)
+		}
+	*/
+
+	OutageConnectLasWweek := client.NewQuery("SELECT * FROM ConnectLatency WHERE (latency > 5000 OR latency < 0) AND time > now() - 7d", MyDB, "ns")
+	if response, err := GetInflxInstance().Query(OutageConnectLasWweek); err == nil && response.Error() == nil {
+		if len(response.Results[0].Series) != 0 {
+			for i := range response.Results[0].Series[0].Values {
+				t, _ := response.Results[0].Series[0].Values[i][0].(json.Number).Int64()
+				latency, _ := response.Results[0].Series[0].Values[i][1].(json.Number).Int64()
+				OutageConnectLastWeek = append(OutageConnectLastWeek, strings.Split(time.Unix(0, t).String(), ".")[0]+" : "+strconv.FormatInt(latency, 10)+" ms")
+			}
+		}
 		if len(response.Results[0].Series) == 0 {
 			CardsConnectLastWeek.setFailure(0)
 		} else {
-			failures, _ := response.Results[0].Series[0].Values[0][1].(json.Number).Int64()
-			CardsConnectLastWeek.setFailure(failures)
+			CardsConnectLastWeek.setFailure(int64(len(response.Results[0].Series[0].Values)))
 		}
+
 	} else {
 		fmt.Println(err, response)
 	}
 
-	LWFconnectP := client.NewQuery("SELECT COUNT(*) FROM PubAckLatency WHERE (latency > 5000 OR latency < 0) AND time > now() - 7d", MyDB, "ns")
-	if response, err := GetInflxInstance().Query(LWFconnectP); err == nil && response.Error() == nil {
+	/*
+		LWFconnectP := client.NewQuery("SELECT COUNT(*) FROM PubAckLatency WHERE (latency > 5000 OR latency < 0) AND time > now() - 7d", MyDB, "ns")
+		if response, err := GetInflxInstance().Query(LWFconnectP); err == nil && response.Error() == nil {
+			if len(response.Results[0].Series) == 0 {
+				CardsPubAckLastWeek.setFailure(0)
+			} else {
+				failures, _ := response.Results[0].Series[0].Values[0][1].(json.Number).Int64()
+				CardsPubAckLastWeek.setFailure(failures)
+			}
+		} else {
+			fmt.Println(err, response)
+		}
+	*/
+
+	OutagePubAckLasWweek := client.NewQuery("SELECT * FROM PubAckLatency WHERE (latency > 5000 OR latency < 0) AND time > now() - 7d", MyDB, "ns")
+	if response, err := GetInflxInstance().Query(OutagePubAckLasWweek); err == nil && response.Error() == nil {
+		if len(response.Results[0].Series) != 0 {
+			for i := range response.Results[0].Series[0].Values {
+				t, _ := response.Results[0].Series[0].Values[i][0].(json.Number).Int64()
+				latency, _ := response.Results[0].Series[0].Values[i][1].(json.Number).Int64()
+				OutagePubAckLastWeek = append(OutagePubAckLastWeek, strings.Split(time.Unix(0, t).String(), ".")[0]+" : "+strconv.FormatInt(latency, 10)+" ms")
+			}
+		}
 		if len(response.Results[0].Series) == 0 {
 			CardsPubAckLastWeek.setFailure(0)
 		} else {
-			failures, _ := response.Results[0].Series[0].Values[0][1].(json.Number).Int64()
-			CardsPubAckLastWeek.setFailure(failures)
+			CardsPubAckLastWeek.setFailure(int64(len(response.Results[0].Series[0].Values)))
 		}
 	} else {
 		fmt.Println(err, response)
 	}
 
-	LWFconnectM := client.NewQuery("SELECT COUNT(*) FROM MessageSentLatency WHERE (latency > 5000 OR latency < 0) AND time > now() - 7d", MyDB, "ns")
-	if response, err := GetInflxInstance().Query(LWFconnectM); err == nil && response.Error() == nil {
+	/*
+		LWFconnectM := client.NewQuery("SELECT COUNT(*) FROM MessageSentLatency WHERE (latency > 5000 OR latency < 0) AND time > now() - 7d", MyDB, "ns")
+		if response, err := GetInflxInstance().Query(LWFconnectM); err == nil && response.Error() == nil {
+			if len(response.Results[0].Series) == 0 {
+				CardsMsgLastWeek.setFailure(0)
+			} else {
+				failures, _ := response.Results[0].Series[0].Values[0][1].(json.Number).Int64()
+				CardsMsgLastWeek.setFailure(failures)
+			}
+		} else {
+			fmt.Println(err, response)
+		}
+	*/
+
+	Outage24Hours := client.NewQuery("SELECT * FROM MessageSentLatency WHERE (latency > 5000 OR latency < 0) AND time > now() - 7d", MyDB, "ns")
+	if response, err := GetInflxInstance().Query(Outage24Hours); err == nil && response.Error() == nil {
+		if len(response.Results[0].Series) != 0 {
+			for i := range response.Results[0].Series[0].Values {
+				t, _ := response.Results[0].Series[0].Values[i][0].(json.Number).Int64()
+				latency, _ := response.Results[0].Series[0].Values[i][1].(json.Number).Int64()
+				OutageMsgLastWeek = append(OutageMsgLastWeek, strings.Split(time.Unix(0, t).String(), ".")[0]+" : "+strconv.FormatInt(latency, 10)+" ms")
+			}
+		}
 		if len(response.Results[0].Series) == 0 {
 			CardsMsgLastWeek.setFailure(0)
 		} else {
-			failures, _ := response.Results[0].Series[0].Values[0][1].(json.Number).Int64()
-			CardsMsgLastWeek.setFailure(failures)
+			CardsMsgLastWeek.setFailure(int64(len(response.Results[0].Series[0].Values)))
 		}
+
 	} else {
 		fmt.Println(err, response)
 	}
 
 	CardsConnect24.setUptime(float32(100) - float32(CardsConnect24.getFailure())/float32(CardsConnect24.getTotal()))
+	CardsConnect24.setOutage(OutageConnect24)
+
 	CardsPubAck24.setUptime(float32(100) - float32(CardsPubAck24.getFailure())/float32(CardsPubAck24.getTotal()))
+	CardsPubAck24.setOutage(OutagePubAck24)
+
 	CardsMsg24.setUptime(float32(100) - float32(CardsMsg24.getFailure())/float32(CardsMsg24.getTotal()))
+	CardsMsg24.setOutage(OutageMsg24)
 
 	CardsConnectLastWeek.setUptime(float32(100) - float32(CardsConnectLastWeek.getFailure())/float32(CardsConnectLastWeek.getTotal()))
+	CardsConnectLastWeek.setOutage(OutageConnectLastWeek)
+
 	CardsPubAckLastWeek.setUptime(float32(100) - float32(CardsPubAckLastWeek.getFailure())/float32(CardsPubAckLastWeek.getTotal()))
+	CardsPubAckLastWeek.setOutage(OutagePubAckLastWeek)
+
 	CardsMsgLastWeek.setUptime(float32(100) - float32(CardsMsgLastWeek.getFailure())/float32(CardsMsgLastWeek.getTotal()))
+	CardsMsgLastWeek.setOutage(OutageMsgLastWeek)
 
 	responseToSend := UpTimeStruct{CardsConnect24, CardsPubAck24, CardsMsg24, CardsConnectLastWeek, CardsPubAckLastWeek, CardsMsgLastWeek}
 	fmt.Println(ToJsonString(responseToSend))

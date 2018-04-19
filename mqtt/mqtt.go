@@ -71,6 +71,7 @@ var (
 	user             UserData
 	counter          int = 1
 	remainingUser    []UserData
+	startTime        time.Time
 )
 
 func GetMqttClient(client *mqtt.ClientOptions) mqtt.Client {
@@ -99,7 +100,8 @@ func getClientOptions(userData UserData) *mqtt.ClientOptions {
 var F mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 	mType, _ := jsonparser.GetString(msg.Payload(), "t")
 	fmt.Println("Message Type In Default Handler : ", mType)
-	if mType == "m" {
+	if mType == "m" || time.Since(startTime) > 1 {
+		fmt.Println("Testing")
 		msgLatency.setEnd(time.Now().UnixNano())
 		fmt.Println("Message Sent latency (ms) :", (msgLatency.getEnd()-msgLatency.getStart())/1000000)
 	}
@@ -156,6 +158,7 @@ func PublishMessage(c mqtt.Client, topic string, qos byte, retained bool, payloa
 			if typeM == "m" {
 				currentT := time.Now().UnixNano()
 				msgLatency.setStart(currentT)
+				startTime = time.Now()
 				config.ChanM <- currentT
 			}
 		}
