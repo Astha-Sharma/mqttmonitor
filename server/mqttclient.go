@@ -34,8 +34,8 @@ var (
 	Environment    string
 	mqttBroker     string
 	seededRand     *rand.Rand = rand.New(rand.NewSource(time.Now().UnixNano()))
-	startTime      time.Time
-	messageReached bool = false
+	//startTime      time.Time
+	//messageReached bool = false
 )
 
 func GetMqttClient(client *mqtt.ClientOptions) mqtt.Client {
@@ -67,7 +67,7 @@ var F mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 		msgLatency.setEnd(time.Now().UnixNano())
 		fmt.Println("Message Sent latency (ms) :", (msgLatency.getEnd()-msgLatency.getStart())/1000000)
 		influx.PushData("MessageSentLatency", (msgLatency.getEnd()-msgLatency.getStart())/1000000)
-		messageReached = true
+		//messageReached = true
 	}
 
 }
@@ -124,7 +124,7 @@ func PublishMessage(c mqtt.Client, topic string, qos byte, retained bool, payloa
 			if typeM == "m" {
 				currentT := time.Now().UnixNano()
 				msgLatency.setStart(currentT)
-				startTime = time.Now()
+				//startTime = time.Now()
 				config.ChanM <- currentT
 			}
 		}
@@ -185,7 +185,7 @@ func GetStatsOfMqtt(env string) {
 	//mqtt.DEBUG = log.New(os.Stdout, "", 0)
 	mqtt.ERROR = log.New(os.Stdout, "", 0)
 
-	messageReached = false
+	//messageReached = false
 
 	//If client is already connected disconnect the same
 	if c != nil && c.IsConnected() {
@@ -212,13 +212,16 @@ func GetStatsOfMqtt(env string) {
 	go func() { config.ChanConAck <- time.Now().UnixNano() }()
 	ConnectToMqtt(c)
 	SendTypeM()
-	go func() {
+	/*
+	func() {
 		for {
+			fmt.Println(time.Since(startTime))
 			if time.Since(startTime) > 5000 && messageReached == false {
 				influx.PushData("MessageSentLatency", 5001)
 				break
 			}
 		}
 	}()
+	*/
 
 }
