@@ -266,11 +266,13 @@ func GetUpDownTime(ctx *fasthttp.RequestCtx) {
 
 	OutageMessageSent := client.NewQuery("SELECT * FROM MessageSentLatency WHERE (latency > 5000 OR latency < 0) AND time > now() - 24h", MyDB, "ns")
 	if response, err := GetInflxInstance().Query(OutageMessageSent); err == nil && response.Error() == nil {
-		for i := range response.Results[0].Series[0].Values {
-			if len(response.Results[0].Series) != 0 {
-				t, _ := response.Results[0].Series[0].Values[i][0].(json.Number).Int64()
-				latency, _ := response.Results[0].Series[0].Values[i][1].(json.Number).Int64()
-				OutageMsg24 = append(OutageMsg24, strings.Split(time.Unix(0, t).String(), ".")[0]+" : "+strconv.FormatInt(latency, 10)+" ms")
+		if (len(response.Results[0].Series)) != 0 {
+			for i := range response.Results[0].Series[0].Values {
+				if len(response.Results[0].Series) != 0 {
+					t, _ := response.Results[0].Series[0].Values[i][0].(json.Number).Int64()
+					latency, _ := response.Results[0].Series[0].Values[i][1].(json.Number).Int64()
+					OutageMsg24 = append(OutageMsg24, strings.Split(time.Unix(0, t).String(), ".")[0]+" : "+strconv.FormatInt(latency, 10)+" ms")
+				}
 			}
 		}
 		if len(response.Results[0].Series) == 0 {
