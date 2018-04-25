@@ -15,7 +15,7 @@ import (
 
 const (
 	MyDB          = "mqttmonitoring"
-	INFLUX_URL    = "http://got.hike.in:8086"
+	INFLUX_URL    = "http://35.198.242.78:8086"
 	SLACK_WEBHOOK = ""
 )
 

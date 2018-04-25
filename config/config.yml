@@ -1,0 +1,7 @@
+database:
+    server: "35.198.242.78"
+    username: "root"
+    password: "hike"
+    port: "3306"
+    schema: "crashlytics_lookup"
+    connection_max: 50

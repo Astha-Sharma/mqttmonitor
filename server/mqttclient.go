@@ -23,17 +23,17 @@ const (
 )
 
 var (
-	latency        Latency
-	msgLatency     MsgLatency
-	msg            = make(chan packets.ControlPacket)
-	connChan       = make(chan packets.ControlPacket)
-	user           UserData
-	counter        int64 = 1
-	remainingUser  []UserData
-	c              mqtt.Client
-	Environment    string
-	mqttBroker     string
-	seededRand     *rand.Rand = rand.New(rand.NewSource(time.Now().UnixNano()))
+	latency       Latency
+	msgLatency    MsgLatency
+	msg           = make(chan packets.ControlPacket)
+	connChan      = make(chan packets.ControlPacket)
+	user          UserData
+	counter       int64 = 1
+	remainingUser []UserData
+	c             mqtt.Client
+	Environment   string
+	mqttBroker    string
+	seededRand    *rand.Rand = rand.New(rand.NewSource(time.Now().UnixNano()))
 	//startTime      time.Time
 	//messageReached bool = false
 )
@@ -62,14 +62,20 @@ func getClientOptions(userData UserData) *mqtt.ClientOptions {
 //define a function for the default message handler
 var F mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Message) {
 	mType, _ := jsonparser.GetString(msg.Payload(), "t")
+	counterS, _ := jsonparser.GetString(msg.Payload(), "d", "i")
+	counterL, _ := strconv.ParseInt(counterS, 10, 64)
 	fmt.Println("Message Type In Default Handler : ", mType, string(msg.Payload()))
 	if mType == "m" {
-		msgLatency.setEnd(time.Now().UnixNano())
-		fmt.Println("Message Sent latency (ms) :", (msgLatency.getEnd()-msgLatency.getStart())/1000000)
-		influx.PushData("MessageSentLatency", (msgLatency.getEnd()-msgLatency.getStart())/1000000)
-		//messageReached = true
+		if counterL == counter {
+			msgLatency.setEnd(time.Now().UnixNano())
+			fmt.Println("Message Sent latency (ms) :", (msgLatency.getEnd()-msgLatency.getStart())/1000000)
+			influx.PushData("MessageSentLatency", (msgLatency.getEnd()-msgLatency.getStart())/1000000)
+			//messageReached = true
+			counter++
+		} else {
+			influx.PushData("MessageSentLatency", -1)
+		}
 	}
-
 }
 
 var OnLost mqtt.ConnectionLostHandler = func(client mqtt.Client, err error) {
@@ -110,7 +116,6 @@ func SendTypeM() {
 	timestamp := fmt.Sprintf("%v", time.Now().UnixNano()/1000000000)
 	msgrandom := "{\"t\": \"m\",\"to\": \"u:" + user.UID + "\",\"d\":{\"hm\":\"" + message + "\",\"i\":\"" + messageId + "\", \"ts\":" + timestamp + "}}"
 	PublishMessage(c, user.UID+"/p", 1, false, msgrandom)
-	counter++
 }
 
 func PublishMessage(c mqtt.Client, topic string, qos byte, retained bool, payload interface{}) { //, msgId uint16) {
@@ -213,15 +218,14 @@ func GetStatsOfMqtt(env string) {
 	ConnectToMqtt(c)
 	SendTypeM()
 	/*
-	func() {
-		for {
-			fmt.Println(time.Since(startTime))
-			if time.Since(startTime) > 5000 && messageReached == false {
-				influx.PushData("MessageSentLatency", 5001)
-				break
+		func() {
+			for {
+				fmt.Println(time.Since(startTime))
+				if time.Since(startTime) > 5000 && messageReached == false {
+					influx.PushData("MessageSentLatency", 5001)
+					break
+				}
 			}
-		}
-	}()
+		}()
 	*/
-
 }

@@ -38,7 +38,7 @@ var (
 func GetInflxInstance() client.Client {
 	once.Do(func() {
 		c, err := client.NewHTTPClient(client.HTTPConfig{
-			Addr: "http://got.hike.in:8086",
+			Addr: "http://35.198.242.78:8086",
 		})
 		if err != nil {
 			log.Fatalf("Error creating InfluxDB Client: ", err.Error())
