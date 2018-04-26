@@ -504,17 +504,17 @@ func TimeDistribution(ctx *fasthttp.RequestCtx) {
 		for i := range response.Results[0].Series[0].Values {
 			min, _ := response.Results[0].Series[0].Values[i][1].(json.Number).Int64()
 			switch {
-			case min > 0 && min <= 50:
+			case min >= 0 && min <= 50:
 				connect0to50 = connect0to50 + 1
-			case min > 51 && min <= 100:
+			case min >= 51 && min <= 100:
 				connect51to100 = connect51to100 + 1
-			case min > 101 && min <= 500:
+			case min >= 101 && min <= 500:
 				connect101to500 = connect101to500 + 1
-			case min > 501 && min <= 1000:
+			case min >= 501 && min <= 1000:
 				connect501to1000 = connect501to1000 + 1
-			case min > 1001 && min <= 5000:
+			case min >= 1001 && min <= 5000:
 				connect1001to5000 = connect1001to5000 + 1
-			case min > 5000:
+			case min >= 5000:
 				connect5001plus = connect5001plus + 1
 			}
 		}
@@ -534,17 +534,17 @@ func TimeDistribution(ctx *fasthttp.RequestCtx) {
 		for i := range response.Results[0].Series[0].Values {
 			min, _ := response.Results[0].Series[0].Values[i][1].(json.Number).Int64()
 			switch {
-			case min > 0 && min <= 50:
+			case min >= 0 && min <= 50:
 				puback0to50 = puback0to50 + 1
-			case min > 51 && min <= 100:
+			case min >= 51 && min <= 100:
 				puback51to100 = puback51to100 + 1
-			case min > 101 && min <= 500:
+			case min >= 101 && min <= 500:
 				puback101to500 = puback101to500 + 1
-			case min > 501 && min <= 1000:
+			case min >= 501 && min <= 1000:
 				puback501to1000 = puback501to1000 + 1
-			case min > 1001 && min <= 5000:
+			case min >= 1001 && min <= 5000:
 				puback1001to5000 = puback1001to5000 + 1
-			case min > 5000:
+			case min >= 5000:
 				puback5001plus = puback5001plus + 1
 			}
 		}
@@ -564,17 +564,17 @@ func TimeDistribution(ctx *fasthttp.RequestCtx) {
 		for i := range response.Results[0].Series[0].Values {
 			min, _ := response.Results[0].Series[0].Values[i][1].(json.Number).Int64()
 			switch {
-			case min > 0 && min <= 50:
+			case min >= 0 && min <= 50:
 				msg0to50 = msg0to50 + 1
-			case min > 51 && min <= 100:
+			case min >= 51 && min <= 100:
 				msg51to100 = msg51to100 + 1
-			case min > 101 && min <= 500:
+			case min >= 101 && min <= 500:
 				msg101to500 = msg101to500 + 1
-			case min > 501 && min <= 1000:
+			case min >= 501 && min <= 1000:
 				msg501to1000 = msg501to1000 + 1
-			case min > 1001 && min <= 5000:
+			case min >= 1001 && min <= 5000:
 				msg1001to5000 = msg1001to5000 + 1
-			case min > 5000:
+			case min >= 5000:
 				msg5001plus = msg5001plus + 1
 			}
 		}
