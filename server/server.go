@@ -41,6 +41,18 @@ func NewServer() {
 		CrashFreeTrendsIOS(ctx)
 	})
 
+	router.GET("/allandroidbuilds", func(ctx *fasthttp.RequestCtx) {
+		CrashFreeTrendsIOS(ctx)
+	})
+
+	router.GET("/androidbuildsversion", func(ctx *fasthttp.RequestCtx) {
+		AndroidBuildVersion(ctx)
+	})
+
+	router.GET("/androidcrashbyversion", func(ctx *fasthttp.RequestCtx) {
+		AndroidCrashByVersion(ctx)
+	})
+
 	router.PanicHandler = func(ctx *fasthttp.RequestCtx, p interface{}) {
 		glog.V(0).Infof("Panic occurred %s", p, ctx.Request.URI().String())
 	}
