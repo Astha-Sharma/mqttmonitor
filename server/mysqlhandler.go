@@ -9,6 +9,25 @@ import (
 	"strings"
 )
 
+const (
+	Client_Horizontal              = "Client Horizontal"
+	Chat                           = "Chat"
+	DevX                           = "DevX"
+	Miscellaneous                  = "Miscellaneous"
+	Stickers                       = "Stickers"
+	Native_Libraries               = "Native Libraries"
+	Camera                         = "Camera"
+	Stories_And_Timeline           = "Stories and Timeline"
+	Backup_Restore                 = "Backup Restore"
+	Notification                   = "Notification"
+	AppX                           = "AppX"
+	Universal_Search_And_Discovery = "Universal Search & Discovery"
+	Onboarding                     = "Onboarding"
+	Friends                        = "Friends"
+	Profile_And_Privacy            = "Profile and Privacy"
+	College_OR_Community           = "College/Community"
+)
+
 type AndroidCrashFreeTrends struct {
 	Dailytreand []Trends `json:"dailytreand"`
 	Weeklytrend []Weekly `json:"weeklytrend"`
@@ -59,14 +78,26 @@ type SCrashDetails struct {
 	LastBuild     string `json:"lastBuild" gorm:"Column:lastBuild"`
 }
 
+func (cd *SCrashDetails) getStatus() string {
+	return cd.Status
+}
+
+func (cd *SCrashDetails) getArea() string {
+	return cd.Area
+}
+
+func (cd *SCrashDetails) getTitle() string {
+	return cd.Title
+}
+
 type SIssuesTypes struct {
-	Text  string `json:"text"`
+	Text  string `json:"name"`
 	Value int    `json:"value"`
 }
 
 type SAreaWiseSplit struct {
-	Text  string `json:"text"`
-	Value string `json:"value"`
+	Text  string `json:"name"`
+	Value int    `json:"value"`
 }
 
 func CrashFreeTrendsAndroid(ctx *fasthttp.RequestCtx) {
@@ -194,11 +225,14 @@ func AndroidCrashByVersion(ctx *fasthttp.RequestCtx) {
 	version := string(ctx.QueryArgs().Peek("version"))
 	tableName := "Issues_" + version
 	var (
-		externalId    string
-		externalIds   []string
-		crashDetails  []SCrashDetails
-		issueType     []SIssuesTypes
-		areaWiseSplit []SAreaWiseSplit
+		externalId                                                                                                                 string
+		externalIds                                                                                                                []string
+		crashDetails                                                                                                               []SCrashDetails
+		issueType                                                                                                                  []SIssuesTypes
+		areaWiseSplit                                                                                                              []SAreaWiseSplit
+		totalIssues, toFix, toTest, closed, toDo, noJira                                                                           int
+		clinetH, chat, devX, miscellaneous, stickers, native_Libraries, camera, stories_And_Timeline, backup_Restore, notification int
+		appX, universal_Search_And_Discovery, onboarding, friends, profile_And_Privacy, college_OR_Community                       int
 	)
 
 	rows, err := db.Raw("SELECT original_externalId From " + tableName).Rows()
@@ -215,6 +249,88 @@ func AndroidCrashByVersion(ctx *fasthttp.RequestCtx) {
 	if err := db.Table("crashdetails").Where("externalId in (?)", externalIds).Find(&crashDetails).Error; err != nil {
 		fmt.Println("Error ----#### ", err.Error)
 	}
+
+	for _, value := range crashDetails {
+		switch value.getStatus() {
+		case "To Fix":
+			toFix++
+			break
+		case "Closed":
+			closed++
+			break
+		case "To Test":
+			toTest++
+			break
+		case "To Do":
+			toDo++
+			break
+		case "":
+			noJira++
+			break
+		}
+	}
+
+	for _, value := range crashDetails {
+		if strings.Contains(value.getArea(), Client_Horizontal) {
+			clinetH++
+		} else if strings.Contains(value.getArea(), Chat) {
+			chat++
+		} else if strings.Contains(value.getArea(), DevX) {
+			devX++
+		} else if strings.Contains(value.getArea(), Miscellaneous) {
+			miscellaneous++
+		} else if strings.Contains(value.getArea(), Stickers) {
+			stickers++
+		} else if strings.Contains(value.getArea(), Native_Libraries) {
+			native_Libraries++
+		} else if strings.Contains(value.getArea(), Camera) {
+			camera++
+		} else if strings.Contains(value.getArea(), Stories_And_Timeline) {
+			stories_And_Timeline++
+		} else if strings.Contains(value.getArea(), Backup_Restore) {
+			backup_Restore++
+		} else if strings.Contains(value.getArea(), Notification) {
+			notification++
+		} else if strings.Contains(value.getArea(), AppX) {
+			appX++
+		} else if strings.Contains(value.getArea(), Universal_Search_And_Discovery) {
+			universal_Search_And_Discovery++
+		} else if strings.Contains(value.getArea(), Onboarding) {
+			onboarding++
+		} else if strings.Contains(value.getArea(), Friends) {
+			friends++
+		} else if strings.Contains(value.getArea(), Profile_And_Privacy) {
+			profile_And_Privacy++
+		} else if strings.Contains(value.getArea(), College_OR_Community) {
+			college_OR_Community++
+		}
+
+	}
+	totalIssues = len(crashDetails)
+	issueType = append(issueType, SIssuesTypes{"TOTAL ISSUES", totalIssues})
+	issueType = append(issueType, SIssuesTypes{"TO FIX", toFix})
+	issueType = append(issueType, SIssuesTypes{"TO TEST", toTest})
+	issueType = append(issueType, SIssuesTypes{"CLOSED", closed})
+	issueType = append(issueType, SIssuesTypes{"TO DO", toDo})
+	issueType = append(issueType, SIssuesTypes{"JIRA NOT ASSIGNED", noJira})
+
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Client_Horizontal, clinetH})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Chat, chat})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{DevX, devX})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Miscellaneous, miscellaneous})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Stickers, stickers})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Native_Libraries, native_Libraries})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Camera, camera})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Stories_And_Timeline, stories_And_Timeline})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Backup_Restore, backup_Restore})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Notification, notification})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{AppX, appX})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Universal_Search_And_Discovery, universal_Search_And_Discovery})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Onboarding, onboarding})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Friends, friends})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Profile_And_Privacy, profile_And_Privacy})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{College_OR_Community, college_OR_Community})
+
 	crashes, _ := json.Marshal(&AndroidIssuesByVersion{crashDetails, issueType, areaWiseSplit})
 	ctx.Response.Header.Set("Content-Type", "application/json")
 	ctx.Response.SetBodyString(string(crashes))
