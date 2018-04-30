@@ -53,6 +53,10 @@ func NewServer() {
 		AndroidCrashByVersion(ctx)
 	})
 
+	router.GET("/microappscrashes", func(ctx *fasthttp.RequestCtx) {
+		MicroAppsCrashes(ctx)
+	})
+
 	router.PanicHandler = func(ctx *fasthttp.RequestCtx, p interface{}) {
 		glog.V(0).Infof("Panic occurred %s", p, ctx.Request.URI().String())
 	}

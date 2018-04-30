@@ -28,6 +28,26 @@ const (
 	College_OR_Community           = "College/Community"
 )
 
+const (
+	Wallet               = "Wallet"
+	Explore              = "Explore"
+	Recharge             = "Recharge"
+	Jokes                = "Jokes"
+	HikeReactStickerShop = "HikeReactStickerShop"
+	Vote                 = "Vote"
+	Gift_Packets         = "Gift Packets"
+	Bill_Split           = "Bill Split"
+	Polls                = "Polls"
+	News                 = "News"
+	Checklist            = "Checklist"
+	Bae_Buddy_Bro        = "Bae Buddy Bro"
+	Hike_Run_Beta        = "Hike Run (Beta)"
+	Hike_Rewards         = "Hike Rewards"
+	Blue_Packets         = "Blue Packets"
+	Hikemetab            = "hikemetab"
+	Confessions          = "Confessions"
+)
+
 type AndroidCrashFreeTrends struct {
 	Dailytreand []Trends `json:"dailytreand"`
 	Weeklytrend []Weekly `json:"weeklytrend"`
@@ -98,6 +118,29 @@ type SIssuesTypes struct {
 type SAreaWiseSplit struct {
 	Text  string `json:"name"`
 	Value int    `json:"value"`
+}
+
+type SMicroAppsCrashDetails struct {
+	ExternalId    string `json:"externalId" gorm:"Column:externalId"`
+	Title         string `json:"title" gorm:"Column:title"`
+	Subtitle      string `json:"subtitle" gorm:"Column:subtitle"`
+	ImpactLevel   int    `json:"impactLevel" gorm:"Column:impactLevel"`
+	Occurances    int    `json:"occurances" gorm:"Column:occurrences"`
+	UsersAffected int    `json:"usersAffected" gorm:"Column:usersAffected"`
+	JiraId        string `json:"jiraId" gorm:"Column:jiraId"`
+	Status        string `json:"status" gorm:"Column:status"`
+	StackTrace    string `json:"stackTrace" gorm:"Column:stackTrace"`
+	FirstBuild    string `json:"firstBuild" gorm:"Column:firstBuild"`
+	LastBuild     string `json:"lastBuild" gorm:"Column:lastBuild"`
+}
+
+type MicroAppResponse struct {
+	MCrashDetails []SMicroAppsCrashDetails `json:"crashDetails"`
+	AreaWiseSplit []SAreaWiseSplit         `json:"areaWiseSplit"`
+}
+
+func (cd *SMicroAppsCrashDetails) getTitle() string {
+	return cd.Title
 }
 
 func CrashFreeTrendsAndroid(ctx *fasthttp.RequestCtx) {
@@ -334,4 +377,78 @@ func AndroidCrashByVersion(ctx *fasthttp.RequestCtx) {
 	crashes, _ := json.Marshal(&AndroidIssuesByVersion{crashDetails, issueType, areaWiseSplit})
 	ctx.Response.Header.Set("Content-Type", "application/json")
 	ctx.Response.SetBodyString(string(crashes))
+}
+
+func MicroAppsCrashes(ctx *fasthttp.RequestCtx) {
+	var (
+		microAppsCrashs                                                                                                       []SMicroAppsCrashDetails
+		wallet, explore, recharge, jokes, hikeReactSticker, vote, giftPackets, billSplit, polls, news, checkList, baeBuddyBro int
+		hikeRun, hikeRewards, bluePackets, hikeMeTab, confession                                                              int
+		areaWiseSplit                                                                                                         []SAreaWiseSplit
+	)
+	db := sql.GetDBConnection()
+	if err := db.Table("crashdetails_nonfatal").
+		Find(&microAppsCrashs).Error; err != nil {
+		fmt.Println("Error ----#### ", err.Error)
+	}
+
+	for _, value := range microAppsCrashs {
+		if strings.Contains(value.getTitle(), Wallet) {
+			wallet++
+		} else if strings.Contains(value.getTitle(), Explore) {
+			explore++
+		} else if strings.Contains(value.getTitle(), Recharge) {
+			recharge++
+		} else if strings.Contains(value.getTitle(), Jokes) {
+			jokes++
+		} else if strings.Contains(value.getTitle(), HikeReactStickerShop) {
+			hikeReactSticker++
+		} else if strings.Contains(value.getTitle(), Vote) {
+			vote++
+		} else if strings.Contains(value.getTitle(), Gift_Packets) {
+			giftPackets++
+		} else if strings.Contains(value.getTitle(), Bill_Split) {
+			billSplit++
+		} else if strings.Contains(value.getTitle(), Polls) {
+			polls++
+		} else if strings.Contains(value.getTitle(), News) {
+			news++
+		} else if strings.Contains(value.getTitle(), Checklist) {
+			checkList++
+		} else if strings.Contains(value.getTitle(), Bae_Buddy_Bro) {
+			baeBuddyBro++
+		} else if strings.Contains(value.getTitle(), Hike_Run_Beta) {
+			hikeRun++
+		} else if strings.Contains(value.getTitle(), Hike_Rewards) {
+			hikeRewards++
+		} else if strings.Contains(value.getTitle(), Blue_Packets) {
+			bluePackets++
+		} else if strings.Contains(value.getTitle(), Hikemetab) {
+			hikeMeTab++
+		} else if strings.Contains(value.getTitle(), Confessions) {
+			confession++
+		}
+	}
+
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Wallet, wallet})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Explore, explore})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Recharge, recharge})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Jokes, jokes})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{HikeReactStickerShop, hikeReactSticker})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Vote, vote})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Gift_Packets, giftPackets})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Bill_Split, billSplit})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Polls, polls})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{News, news})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Checklist, checkList})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Bae_Buddy_Bro, baeBuddyBro})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Hike_Run_Beta, hikeRun})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Hike_Rewards, hikeRewards})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Blue_Packets, bluePackets})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Hikemetab, hikeMeTab})
+	areaWiseSplit = append(areaWiseSplit, SAreaWiseSplit{Confessions, confession})
+
+	tests, _ := json.Marshal(&MicroAppResponse{microAppsCrashs, areaWiseSplit})
+	ctx.Response.Header.Set("Content-Type", "application/json")
+	ctx.Response.SetBodyString(string(tests))
 }
