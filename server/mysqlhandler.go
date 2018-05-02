@@ -81,6 +81,7 @@ type AndroidIssuesByVersion struct {
 }
 
 type SCrashDetails struct {
+	ExternalId    string `json:"externalId" gorm:"Column:externalId"`
 	Title         string `json:"title" gorm:"Column:title"`
 	Subtitle      string `json:"subtitle" gorm:"Column:subtitle"`
 	Area          string `json:"area" gorm:"Column:area"`
